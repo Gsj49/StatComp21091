@@ -6,6 +6,6 @@
 #' @param x A single integer.
 #' @export
 timesTwo <- function(x) {
-    .Call('_StatComp_timesTwo', PACKAGE = 'StatComp', x)
+    .Call('_StatComp21091_timesTwo', PACKAGE = 'StatComp21091', x)
 }
 

@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // timesTwo
 int timesTwo(int x);
-RcppExport SEXP _StatComp_timesTwo(SEXP xSEXP) {
+RcppExport SEXP _StatComp21091_timesTwo(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -23,11 +23,11 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_StatComp_timesTwo", (DL_FUNC) &_StatComp_timesTwo, 1},
+    {"_StatComp21091_timesTwo", (DL_FUNC) &_StatComp21091_timesTwo, 1},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_StatComp(DllInfo *dll) {
+RcppExport void R_init_StatComp21091(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

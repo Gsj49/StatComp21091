@@ -1,4 +1,4 @@
-Package: StatComp
+Package: StatComp21091
 Type: Package
 Title: What the Package Does (Title Case)
 Version: 0.1.0
@@ -13,5 +13,7 @@ VignetteBuilder: knitr
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.2
+URL: http://github.com/Gsj49/StatComp21091
+BugReports: http://github.com/Gsj49/StatComp21091/issues
 LinkingTo: 
     Rcpp
