@@ -1,13 +1,13 @@
 Package: StatComp21091
 Type: Package
 Title: What the Package Does (Title Case)
-Version: 0.1.0
+Version: 0.2.0
 Author: Gongshijin
 Maintainer: Gongshijin <gongshijin0409@mail.ustc.edu.cn>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
 License: GPL (>= 2)
-Imports: Rcpp, microbenchmark, knitr, rmarkdown 
+Imports: Rcpp, microbenchmark
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 Encoding: UTF-8
