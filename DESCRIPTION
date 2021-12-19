@@ -1,11 +1,10 @@
 Package: StatComp21091
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Statistic Computing project
 Version: 0.2.0
 Author: Gongshijin
 Maintainer: Gongshijin <gongshijin0409@mail.ustc.edu.cn>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Description: This package is used for finals of Statistic Computing 
 License: GPL (>= 2)
 Imports: Rcpp, microbenchmark
 Suggests: knitr, rmarkdown
