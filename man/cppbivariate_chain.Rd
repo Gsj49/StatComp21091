@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{cppbivariate_chain}
 \alias{cppbivariate_chain}
-\title{Test}
+\title{This (cpp) function generates a bivariate chain according to homework_10}
 \usage{
 cppbivariate_chain(N)
 }
@@ -10,5 +10,5 @@ cppbivariate_chain(N)
 \item{N}{length of the chain}
 }
 \description{
-Test
+This (cpp) function generates a bivariate chain according to homework_10
 }

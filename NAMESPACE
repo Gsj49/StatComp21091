@@ -2,7 +2,6 @@
 
 export(cppbivariate_chain)
 export(hello)
-export(timesThree)
-export(timesTwo)
+export(mamar)
 importFrom(Rcpp,sourceCpp)
 useDynLib(StatComp21091)

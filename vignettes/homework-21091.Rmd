@@ -1388,7 +1388,7 @@ rbivariate_chain <- function(n){
 ```{r}
 N = 5000
 rX = rbivariate_chain(N)
-# cppX = cppbivariate_chain(N)
+
 cppX = cppbivariate_chain(N)
 ```
 

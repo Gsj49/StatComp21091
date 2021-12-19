@@ -1,7 +1,7 @@
 Package: StatComp21091
 Type: Package
 Title: Statistic Computing project
-Version: 0.2.1
+Version: 0.3.0
 Author: Gongshijin
 Maintainer: Gongshijin <gongshijin0409@mail.ustc.edu.cn>
 Description: This package is used for finals of Statistic Computing. 
@@ -14,7 +14,8 @@ Imports:
     boot,
     RANN,
     energy,
-    Ball
+    Ball,
+    parallel,
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 Encoding: UTF-8

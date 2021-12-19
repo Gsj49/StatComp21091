@@ -1,0 +1,32 @@
+---
+title: "Model Averaging Marginal Regression"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Model Averaging MArginal Regression}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, include=FALSE}
+library(StatComp21091)
+```
+
+## Idea
+This is the introduction of my package \textbf{StatComp21091}. The main contribution of my package is to implement the Model Averaging Marginal Regression (MAMAR) algorithm proposed in the article: 
+ 
+Li D, Linton O, Lu Z. A flexible semiparametric forecasting model for time series[J]. Journal of Econometrics, 2015, 187(1): 345-357.
+ 
+This algorithm basically approximate a multivariate regression function by an affine combination of one-dimensional marginal regression functions. 
+
+## Funtion
+The \code{mamar()} function implement MAMAR algorithm. 
+```
+model <- mamar(x)
+```

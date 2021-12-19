@@ -10,16 +10,9 @@ using namespace Rcpp;
 
 
 
-//' Multiply a number by two
-//'
-//' @param x A single integer.
-//' @export
-// [[Rcpp::export]]
-int timesTwo(int x) {
-  return x * 2;
-}
 
-//' Test
+
+//' This (cpp) function generates a bivariate chain according to homework_10
 //'
 //' @param N length of the chain
 //' @export

@@ -10,17 +10,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// timesTwo
-int timesTwo(int x);
-RcppExport SEXP _StatComp21091_timesTwo(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(timesTwo(x));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cppbivariate_chain
 NumericMatrix cppbivariate_chain(int N);
 RcppExport SEXP _StatComp21091_cppbivariate_chain(SEXP NSEXP) {
@@ -32,22 +21,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// timesThree
-int timesThree(int x);
-RcppExport SEXP _StatComp21091_timesThree(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(timesThree(x));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_StatComp21091_timesTwo", (DL_FUNC) &_StatComp21091_timesTwo, 1},
     {"_StatComp21091_cppbivariate_chain", (DL_FUNC) &_StatComp21091_cppbivariate_chain, 1},
-    {"_StatComp21091_timesThree", (DL_FUNC) &_StatComp21091_timesThree, 1},
     {NULL, NULL, 0}
 };
 
