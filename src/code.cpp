@@ -17,3 +17,4 @@ using namespace Rcpp;
 int timesTwo(int x) {
   return x * 2;
 }
+
