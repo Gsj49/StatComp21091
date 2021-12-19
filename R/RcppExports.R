@@ -9,3 +9,11 @@ timesTwo <- function(x) {
     .Call('_StatComp21091_timesTwo', PACKAGE = 'StatComp21091', x)
 }
 
+#' Multiply a number by three
+#'
+#' @param x A single integer.
+#' @export
+timesThree <- function(x) {
+    .Call('_StatComp21091_timesThree', PACKAGE = 'StatComp21091', x)
+}
+

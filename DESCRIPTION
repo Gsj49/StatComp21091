@@ -1,7 +1,7 @@
 Package: StatComp21091
 Type: Package
 Title: Statistic Computing project
-Version: 0.2.0
+Version: 0.2.1
 Author: Gongshijin
 Maintainer: Gongshijin <gongshijin0409@mail.ustc.edu.cn>
 Description: This package is used for finals of Statistic Computing 

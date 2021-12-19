@@ -711,5 +711,633 @@ cat("standard:",1-mean((standard_interval[,1]>true_skewness | standard_interval[
 cat("basic:",1-mean(basic_interval[,1]>true_skewness | basic_interval[,2]<true_skewness),"\n")
 cat("percentile:",1-mean(percentile_interval[,1]>true_skewness | percentile_interval[,2]<true_skewness))
 ```
+ 
+# 21091-2021-11-04
 
+
+## Questions
+Exercise 8.2 (page 242, Statistical Computating with R)
+
+## Answers
+
+### 8.2
+```{r}
+
+n <- 15
+N <- 30
+set.seed(23421)
+x <- rnorm(n,0,1)
+y <- rnorm(n,0,1)
+z <- c(x,y)
+R <- 1000
+reps <- numeric(R)
+t0 <- cor(x,y,method = "spearman")
+for (i in 1:R) {
+  k <- sample(1:N, size = n, replace = FALSE)
+  x1 <- z[k]; y1 <- z[-k]
+  reps[i] <- cor(x1,y1,method="spearman")
+}
+p1 <- mean(abs(c(t0, reps)) >= abs(t0))
+cat("Permutation test p_values:",p1)
+```
+
+```{r}
+t = cor.test(x,y,alternative = 'two.sided', method = "spearman")
+p2<- t$p.value
+cat("cor.test p_values:",p2)
+```
+
+### Additional question
+Design experiments for evaluating the performance of the NN, energy, and ball methods in various situations.
+
+#### Unequal variances and equal expectations
+
+```{r}
+library(boot)
+library(RANN)
+library(energy)
+library(Ball)
+```
+
+```{r}
+Tn <- function(z, ix, sizes,k) {
+n1 <- sizes[1]; n2 <- sizes[2]; n <- n1 + n2
+if(is.vector(z)) z <- data.frame(z);
+z <- z[ix, ];
+NN <- nn2(data=z, k=k+1) # What is the first column?
+block1 <- NN$nn.idx[1:n1,-1]
+block2 <- NN$nn.idx[(n1+1):n,-1]
+i1 <- sum(block1 <= n1); i2 <- sum(block2 > n1)
+(i1 + i2) / (k * n)
+}
+```
+
+```{r}
+m <- 100; 
+k<-3; 
+p<-2; 
+mu1 <- 0.5
+mu2 <- 1.5
+set.seed(145)
+
+n1 <- n2 <- 15; R<-100; n <- n1+n2; N = c(n1,n2)
+eqdist.nn <- function(z,sizes,k){
+  boot.obj <- boot(data=z,statistic=Tn,R=R,
+  sim = "permutation", sizes = sizes,k=k)
+  ts <- c(boot.obj$t0,boot.obj$t)
+  p.value <- mean(ts>=ts[1])
+  list(statistic=ts[1],p.value=p.value)}
+
+p.values <- matrix(NA,m,3)
+  for(i in 1:m){
+  x <- matrix(rnorm(n1*p,mu1,1),ncol=p);
+  y <- matrix(rnorm(n2*p,mu2,1),ncol=p);
+  z <- rbind(x,y)
+  p.values[i,1] <- eqdist.nn(z,N,k)$p.value
+  p.values[i,2] <- eqdist.etest(z,sizes=N,R=R)$p.value
+  p.values[i,3] <- bd.test(x=x,y=y,num.permutations=R,seed=i*12345)$p.value
+}
+alpha <- 0.1;
+pow <- colMeans(p.values<alpha)
+
+```
+```{r}
+pow
+```
+ 
+#### Unequal variances and unequal expectations
+
+```{r}
+
+mu1 <- 0
+mu2 <- 1
+sigma1 <- 1
+sigma2 <- 1.5
+n1 <- n2 <- 15; n <- n1+n2; N = c(n1,n2)
+
+p.values <- matrix(NA,m,3)
+  for(i in 1:m){
+  x <- matrix(rnorm(n1*p,mu1,sigma1),ncol=p);
+  y <- matrix(rnorm(n2*p,mu2,sigma2),ncol=p);
+  z <- rbind(x,y)
+  p.values[i,1] <- eqdist.nn(z,N,k)$p.value
+  p.values[i,2] <- eqdist.etest(z,sizes=N,R=R)$p.value
+  p.values[i,3] <- bd.test(x=x,y=y,num.permutations=R,seed=i*12345)$p.value
+}
+alpha <- 0.1;
+pow <- colMeans(p.values<alpha)
+print(pow)
+```
+ 
+#### t distribution with 1 df (heavy-tailed distribution) and bimodel distribution (mixture of two normal distributions)
+
+
+```{r}
+
+df <- 1
+n1 <- n2 <- 15 
+n <- n1+n2; N = c(n1,n2)
+
+p.values <- matrix(NA,m,3)
+  for(i in 1:m){
+  x <- matrix(rt(n1*p,df),ncol=p);
+  num <- rbinom(1,n2,0.5)
+  y1 <- matrix(rnorm(num*p,0,1),ncol=p)
+  y2 <- matrix(rnorm((n2-num)*p,0,3),ncol=p)
+  y <- rbind(y1,y2)
+  z <- rbind(x,y)
+  p.values[i,1] <- eqdist.nn(z,N,k)$p.value
+  p.values[i,2] <- eqdist.etest(z,sizes=N,R=R)$p.value
+  p.values[i,3] <- bd.test(x=x,y=y,num.permutations=R,seed=i*12345)$p.value
+}
+alpha <- 0.1;
+pow <- colMeans(p.values<alpha)
+print(pow)
+```
+
+ 
+#### Unbalanced samples (say, 1 case versus 10 controls)
+```{r}
+
+n1 <- 2
+n2 <- 20
+n <- n1+n2; N = c(n1,n2)
+
+p.values <- matrix(NA,m,3)
+  for(i in 1:m){
+  x <- matrix(rnorm(n1*p,0,1),ncol=p)
+  y <- matrix(rnorm(n2*p,0,1),ncol=p)
+  z <- rbind(x,y)
+  p.values[i,1] <- eqdist.nn(z,N,k)$p.value
+  p.values[i,2] <- eqdist.etest(z,sizes=N,R=R)$p.value
+  p.values[i,3] <- bd.test(x=x,y=y,num.permutations=R,seed=i*12345)$p.value
+}
+alpha <- 0.1;
+pow <- colMeans(p.values<alpha)
+print(pow)
+```
+ 
+# 21091-2021-11-11
+ 
+## Question
+Exercies 9.3 and 9.8 (pages 277-278, Statistical Computating with R).
+For each of the above exercise, use the Gelman-Rubin method to monitor convergence of the chain, and run the chain until it converges approximately to the target distribution according to Rˆ< 1.2.
+## Answers
+
+### 9.3
+```{r}
+# main part of the following code is copied from the slides of professor Zhang
+set.seed(4313)
+m <- 10000
+sigma <- 10
+mean <- 0
+x <- numeric(m)
+x[1] <- 0
+k <- 0
+u <- runif(m)
+
+for (i in 2:m) {
+    xt <- x[i-1]
+    y <- rnorm(1,0,sigma)
+    num <- dcauchy(y) * dnorm(xt,0,sigma)
+    den <- dcauchy(xt) * dnorm(y, 0,sigma)
+    if (u[i] <= num/den){
+      x[i] <- y
+    } else {
+      x[i] <- xt
+      k <- k+1     #y is rejected
+    }
+}
+
+index <- 5500:6000
+y1 <- x[index]
+plot(index, y1, type="l", main="", ylab="x")
+```
+```{r}
+b <- 3000
+y <- x[b:m]
+a <- c(1:9)/10
+rbind(qcauchy(a),quantile(y,a))
+```
+
+
+### 9.8
+condition distribution are respectively Binomial(n, x2) and Beta(x1 + a, n − x1 + b)
+```{r}
+# main part of the following code is copied from the slides of professor Zhang
+set.seed(10311)
+N <- 5000 
+burn <- 1000 
+X <- matrix(0, N, 2)
+a <- 2
+b <- 3
+n <- 8
+X[1, ] <- c(2, 0.5) #initialize
+for (i in 2:N) {
+  x2 <- X[i-1, 2]
+  X[i, 1] <- rbinom(1,n,x2)
+  x1 <- X[i, 1]
+  X[i, 2] <- rbeta(1, x1+a, n-x1+b)
+}
+b <- burn + 1
+x <- X[b:N, ]
+index <- 3000:3500
+y1 <- X[index,1]
+y2 <- X[index,2]
+plot(index, y1, type="l", main="the chain of x", ylab="x")
+plot(index, y2, type="l", main="the chain of y", ylab="y")
+```
+
+### extra question
+
+#### 9.3
+```{r}
+Gelman.Rubin <- function(psi) {
+
+    psi <- as.matrix(psi)
+    n <- ncol(psi)
+    k <- nrow(psi)
+
+    psi.means <- rowMeans(psi)     #row means
+    B <- n * var(psi.means)        #between variance est.
+    psi.w <- apply(psi, 1, "var")  #within variances
+    W <- mean(psi.w)               #within est.
+    v.hat <- W*(n-1)/n + (B/n)     #upper variance est.
+    r.hat <- v.hat / W             #G-R statistic
+    return(r.hat)
+    }
+```
+
+```{r}
+cauchy.chain <- function(N,initial_value,Sigma=1) {
+    m <- N
+    sigma <- Sigma
+    x <- numeric(m)
+    x[1] <- initial_value
+    k <- 0
+    u <- runif(m)
+    for (i in 2:m) {
+        xt <- x[i-1]
+        y <- rnorm(1,xt,sigma)
+        num <- dcauchy(y) * dnorm(xt,y,sigma)
+        den <- dcauchy(xt) * dnorm(y,xt,sigma)
+        if (u[i] <= num/den){
+          x[i] <- y
+        } else {
+          x[i] <- xt
+          k <- k+1     #y is rejected
+        }
+    }
+    return(x)
+}
+```
+```{r}
+set.seed(15)
+k <- 5          #number of chains to generate
+n <- 4000     #length of chains
+b <- 1000       #burn-in length
+
+sigma <- 3
+X <- matrix(0, nrow=k, ncol=n)
+
+x0 <- c(-3, -1.5, 0, 1.5, 3)
+for (i in 1:k)
+    X[i, ] <- cauchy.chain(n,x0[i],sigma)
+```
+
+
+```{r}
+
+psi <- t(apply(X, 1, cumsum))
+for (i in 1:nrow(psi))
+    psi[i,] <- psi[i,] / (1:ncol(psi))
+rhat <- rep(0, n)
+for (j in (b+1):n)
+    rhat[j] <- Gelman.Rubin(psi[,1:j])
+plot(rhat[(b+1):n], type="l", xlab="", ylab="R")
+abline(h=1.2, lty=2)
+```
+ 
+#### 9.8
+
+For $y$:
+```{r}
+bivariate_chain <- function(n,y_initial_value=0.5,x_initial_value=2){
+  N <- n
+  burn <- 1000 
+  X <- matrix(0, N, 2)
+  a <- 2
+  b <- 3
+  n <- 10
+  X[1, 1] <- x_initial_value
+  X[1,2] <- y_initial_value
+  for (i in 2:N) {
+    x2 <- X[i-1, 2]
+    X[i, 1] <- rbinom(1,n,x2)
+    x1 <- X[i, 1]
+    X[i, 2] <- rbeta(1, x1+a, n-x1+b)
+  }
+  return(X)
+}
+
+k <- 5          #number of chains to generate
+n <- 4000     #length of chains
+b <- 1000       #burn-in length
+
+X <- matrix(0, nrow=k, ncol=n)
+
+y_intial_value = c(0.1,0.3,0.5,0.7,0.9)
+for (i in 1:k)
+    X[i, ] <- bivariate_chain(n,y_initial_value =y_intial_value[i])[,2]
+
+psi <- t(apply(X, 1, cumsum))
+for (i in 1:nrow(psi))
+    psi[i,] <- psi[i,] / (1:ncol(psi))
+rhat <- rep(0, n)
+for (j in (b+1):n)
+    rhat[j] <- Gelman.Rubin(psi[,1:j])
+plot(rhat[(b+1):n], type="l", xlab="", ylab="R")
+abline(h=1.2, lty=2)
+```
+$r<1.2$, this means $y$ converges. 
+ 
+For $x$:
+```{r}
+
+k <- 5          #number of chains to generate
+n <- 4000     #length of chains
+b <- 1000       #burn-in length
+set.seed(42341)
+X <- matrix(0, nrow=k, ncol=n)
+
+x_initial_value = c(1,3,5,7,9)
+for (i in 1:k)
+    X[i, ] <- bivariate_chain(n,x_initial_value = x_initial_value[i])[,1]
+
+psi <- t(apply(X, 1, cumsum))
+for (i in 1:nrow(psi))
+    psi[i,] <- psi[i,] / (1:ncol(psi))
+rhat <- rep(0, n)
+for (j in (b+1):n)
+    rhat[j] <- Gelman.Rubin(psi[,1:j])
+plot(rhat[(b+1):n], type="l", xlab="", ylab="R")
+abline(h=1.2, lty=2)
+```
+this means $x$ converges.
+ 
+# 21091-2021-11-18
+ 
+## Question 
+
+Exercises 11.3 and 11.5 (pages 353-354, Statistical Computing with R)
+ 
+## Answers
+ 
+### 11.3
+#### (a)
+```{r}
+euclidean_norm <- function(x){
+  return(sqrt(sum(x^2)))
+  }
+
+general_term <- function(k,a,d){
+  temp <-  (2*k+2)*log(euclidean_norm(a)) + log(gamma((1+d)/2)) + log(gamma(k+3/2)) - log(factorial(k)) - k*log(2) -log(2*k+1) - log(2*k+2) - log(gamma(k+d/2+1))
+  return(exp(temp) * (-1)^k)
+}
+```
+```{r}
+general_term(7,c(1,2),2)
+```
+
+#### (b)
+```{r}
+# calculate till 2n+1
+S_n <- function(n,a){
+  s <- 0
+  d <- length(a)
+  for(i in 0:n){
+    s <- s + general_term(i,a,d)
+  }
+  return(s)
+}
+```
+#### (c)
+```{r}
+a <- c(1,2)
+d <- 2
+print(S_n(160,a) - S_n(159,a))
+cat(S_n(160,a))
+```
+ 
+### 11.5
+ 
+#### 11.4 result
+```{r}
+s <- function(a,k){
+  1 - pt(sqrt((a^2*k)/(k+1-a^2)),df=k)
+}
+
+f_d <- function(a,k){
+  s(a,k) - s(a,k-1)
+}
+
+K <- c(4:25,100,500,1000)
+n <- length(K)
+res <- numeric(n)
+for(i in 1:n){
+  res[i] <- uniroot(f_d,k=K[i],lower=0.01,upper=sqrt(K[i])-0.01)$root
+}
+round(res,3)
+```
+#### calculate 11.5
+```{r}
+ck <- function(a,k) (a^2*k)/(k+1-a^2)
+term <- function(a,k){
+  integrate(dt,df=k,lower =0,upper = ck(a,k))$value
+}
+f_d2 <- function(a,k){
+  term(a,k) - term(a,k-1) 
+}
+```
+
+```{r}
+# in order to prevent error, eachupper bound should be set in a correct range
+lower_bound <- 0.1
+upper_bound <- numeric(n)
+for(i in 1:n){
+  s <-  seq(2,20,by = 0.05)
+  for(j in 1:length(s)){
+    if(f_d2(s[j],K[i])>0) next
+    upper_bound[i] = s[j]
+    break
+  }
+}
+```
+
+```{r}
+res2 <- numeric(n)
+for(i in 1:n){
+  res2[i] <- uniroot(f_d2,k=K[i],lower=0.5,upper=upper_bound[i])$root
+}
+round(res2,3)
+```
+
+this is not consistent with the result of exercise11.4, thus we find that the integrate method is not that reliable.
+
+### extra question
+Denote $x=(x_1,...,x_n)$ by the true value of $y=(y_1,...,y_n)$. By basic calculation:
+$$
+\begin{aligned}
+Q(\lambda,\hat{\lambda}) &= E\left[\log(\lambda^n\cdot e^{-\lambda\cdot\sum_{i=1}^nx_i})\big| y,\hat{\lambda}\right]\\
+&= n\log\lambda - \lambda\cdot\sum_{i=1}^nE[x_i|y_i,\hat{\lambda}]
+\end{aligned}
+$$
+Since
+$$
+E(x_i|y_i,\hat{\lambda}) = \left\{
+\begin{array}{l}
+y_i,&   y_i<\tau\\
+\tau +1/\hat{\lambda},& y_i =\tau
+\end{array}\right.
+$$
+We have 
+$$
+\lambda^{(i+1)}=\frac{n}{m/\hat{\lambda}+\sum_{i=1}^n y_i } ,\quad \text{where m is the number of y_i that equals to } \tau
+$$
+code:
+```{r}
+y = c(0.54, 0.48, 0.33, 0.43, 1.00, 1.00, 0.91, 1.00, 0.21, 0.85)
+n = length(y)
+m = n-sum(y<1)
+tau = 1
+lambda <- 0
+lambda0 <- 1
+k <- 0
+while(abs(lambda-lambda0)>0.00001 && k<100){
+  lambda <- lambda0
+  lambda0 <- n/(m/lambda+sum(y))
+  k = k+1
+}
+cat("EM lambda:",lambda0)
+```
+
+As for MLE, we have
+$$
+l(\lambda) = \lambda^7\cdot e^{-\lambda\cdot\sum_{i=1}^7y^{(i)}}\cdot e^{-3\lambda} = \lambda^7\cdot e^{-6.75\lambda}
+$$
+where $y^(i)$ is order statistic, this leads to 
+```{r}
+f<-function(x) {x^7*exp(-6.75*x)}
+optimize(f,lower=0.2,upper=1.3,maximum = T)
+```
+this equals to the result of EM alog.
+ 
+# 21091-2021-11-25
+
+## Questions
+1.Exercises 1 and 5 (page 204, Advanced R)
+
+2.Excecises 1 and 7 (page 214, Advanced R)
+
+## Answers
+### Page204 Ex1
+```{r}
+trims <- c(0, 0.1, 0.2, 0.5)
+x <- rcauchy(100)
+lapply(trims, function(trim) mean(x, trim = trim))
+```
+
+
+```{r}
+lapply(trims, mean, x = x)
+```
+这两行代码实现的是同一件事。第一种是把固定x的以trim为输入的mean函数用匿名函数形式作为lapply的fun；第二种是直接用mean，并把x作为lapply的参数传入。
+
+### Page204 Ex5
+#### for ex3
+```{r}
+data <- mtcars
+formulas <- list(
+  mpg ~ disp,
+  mpg ~ I(1 / disp),
+  mpg~disp+wt, 
+  mpg~I(1/disp)+wt)
+rsq <- function(mod) summary(mod)$r.squared
+```
+```{r}
+model <- lapply(formulas,lm,data=data)
+r2 <- lapply(model, rsq)
+print(r2)
+```
+#### for ex4
+```{r}
+bootstraps <- lapply(1:10, function(i) {
+         rows <- sample(1:nrow(mtcars), rep = TRUE)
+         mtcars[rows, ]})
+
+model <- lapply(bootstraps,lm,formula=mpg ~ disp)
+r2 <- lapply(model, rsq)
+print(r2)
+```
+
+### Page214 Ex1
+```{r}
+set.seed(1341)
+df <- data.frame(matrix(rnorm(15),5,3))
+print(df)
+```
+```{r}
+vapply(df,sd,FUN.VALUE=c(sd=0))
+```
+```{r}
+X4 = c("a","b","c","d","e")
+df <- cbind(df,X4)
+print(df)
+```
+```{r}
+# use vapply to find numeric columns
+num_col_index <-  vapply(df,class,FUN.VALUE = c("a"))=="numeric"
+vapply(df[,num_col_index],sd,FUN.VALUE=c(sd=0))
+```
+### Page214 Ex7
+Implement mcsapply():
+```{r}
+library(parallel)
+boot_df <- function(x) x[sample(nrow(x), rep = T), ]
+
+rsquared <- function(mod) summary(mod)$r.square
+
+boot_lm <- function(i) {
+  dat <- boot_df(mtcars)
+  rsquared(lm(mpg ~ wt + disp, data = dat))
+}
+
+```
+
+```{r}
+mcsapply<-function (X, FUN, ..., simplify = TRUE, USE.NAMES = TRUE, mc.preschedule = TRUE,
+ mc.set.seed = TRUE, mc.silent = FALSE, mc.cores = getOption("mc.cores", 2L), 
+  mc.cleanup = TRUE, mc.allow.recursive = TRUE, affinity.list = NULL )
+{
+  answer <- mclapply(X = X, FUN = FUN, ...,mc.preschedule = mc.preschedule, 
+mc.set.seed = mc.set.seed, mc.silent = mc.silent, mc.cores = mc.cores, 
+  mc.cleanup = mc.cleanup, mc.allow.recursive = mc.allow.recursive, affinity.list = affinity.list)
+  if (USE.NAMES && is.character(X) && is.null(names(answer))) 
+    names(answer) <- X
+  if (!isFALSE(simplify) && length(answer)) 
+    simplify2array(answer, higher = (simplify == "array"))
+  else answer
+}
+```
+
+```{r}
+n <- 5e3
+system.time(sapply(1:n, boot_lm))
+
+system.time(mcsapply(1:n, boot_lm, mc.cores = 4))
+```
+ 
+可以实现mcsapply是也因为发现sapply实际上是封装了lapply。但是vapply代码不是这么实现的，所以我实现不了mcvapply。
+
+# 21091-2021-12-02
 

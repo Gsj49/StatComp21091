@@ -21,9 +21,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// timesThree
+int timesThree(int x);
+RcppExport SEXP _StatComp21091_timesThree(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(timesThree(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_StatComp21091_timesTwo", (DL_FUNC) &_StatComp21091_timesTwo, 1},
+    {"_StatComp21091_timesThree", (DL_FUNC) &_StatComp21091_timesThree, 1},
     {NULL, NULL, 0}
 };
 
