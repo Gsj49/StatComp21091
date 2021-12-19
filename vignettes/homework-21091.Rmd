@@ -13,6 +13,10 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+```{r setup}
+library(StatComp21091)
+```
+ 
  
 # 21091-2021-09-23
  
@@ -1334,10 +1338,71 @@ mc.set.seed = mc.set.seed, mc.silent = mc.silent, mc.cores = mc.cores,
 n <- 5e3
 system.time(sapply(1:n, boot_lm))
 
-system.time(mcsapply(1:n, boot_lm, mc.cores = 4))
+#system.time(mcsapply(1:n, boot_lm, mc.cores = 4))
 ```
  
 可以实现mcsapply是也因为发现sapply实际上是封装了lapply。但是vapply代码不是这么实现的，所以我实现不了mcvapply。
-
+ 
 # 21091-2021-12-02
+ 
+## Questions
+
+Write an Rcpp function for Exercise 9.8 (page 278, Statistical Computing with R).
+
+Compare the corresponding generated random numbers with pure R language using the function “qqplot”.
+
+Campare the computation time of the two functions with the function “microbenchmark”.
+
+Comments your results.
+
+## Answers
+### (1)
+```{r}
+library(Rcpp)
+library(microbenchmark)
+```
+
+```{r}
+set.seed(10311)
+
+rbivariate_chain <- function(n){
+  N <- n
+  burn <- 1000 
+  X <- matrix(0, N, 2)
+  a <- 2
+  b <- 3
+  n <- 10
+  X[1,1] <- 2
+  X[1,2] <- 0.5
+  for (i in 2:N) {
+    x1 <- X[i-1, 1]
+    x2 <- X[i-1, 2]
+    X[i, 1] <- rbinom(1,n,x2)
+    X[i, 2] <- rbeta(1, x1+a, n-x1+b)
+  }
+  return(X)
+}
+```
+
+### (2)
+```{r}
+N = 5000
+rX = rbivariate_chain(N)
+# cppX = cppbivariate_chain(N)
+cppX = cppbivariate_chain(N)
+```
+
+```{r}
+qqplot(rX[2000:5000,1],cppX[2000:5000,1],main="qqplot of X1")
+qqplot(rX[2000:5000,2],cppX[2000:5000,2],main="qqplot of X2")
+```
+
+### (3)
+```{r}
+
+ts = microbenchmark(gibsR=rbivariate_chain(N), gibsC=cppbivariate_chain(N))
+summary(ts)
+```
+### (4)
+两者生成的样本大致符合同一分布，但是cpp的速度快于r非常多
 

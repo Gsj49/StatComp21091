@@ -9,6 +9,14 @@ timesTwo <- function(x) {
     .Call('_StatComp21091_timesTwo', PACKAGE = 'StatComp21091', x)
 }
 
+#' Test
+#'
+#' @param N length of the chain
+#' @export
+cppbivariate_chain <- function(N) {
+    .Call('_StatComp21091_cppbivariate_chain', PACKAGE = 'StatComp21091', N)
+}
+
 #' Multiply a number by three
 #'
 #' @param x A single integer.

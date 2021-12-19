@@ -24,7 +24,7 @@
 #' @examples
 #' hello(3)
 hello <- function(n) {
-  for(i in 1:n){
+  for(i in 1:2*n){
     print("Hello, world!")
   }
 }

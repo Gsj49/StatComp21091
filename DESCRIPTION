@@ -4,9 +4,17 @@ Title: Statistic Computing project
 Version: 0.2.1
 Author: Gongshijin
 Maintainer: Gongshijin <gongshijin0409@mail.ustc.edu.cn>
-Description: This package is used for finals of Statistic Computing 
+Description: This package is used for finals of Statistic Computing. 
 License: GPL (>= 2)
-Imports: Rcpp, microbenchmark
+Imports: 
+    Rcpp,
+    microbenchmark,
+    MASS,
+    bootstrap,
+    boot,
+    RANN,
+    energy,
+    Ball
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 Encoding: UTF-8
