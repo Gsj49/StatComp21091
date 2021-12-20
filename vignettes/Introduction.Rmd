@@ -15,18 +15,101 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup, include=FALSE}
-library(StatComp21091)
+MamarSingleStepforecast <- function(ts, num_lags, num_samples, step_forward=1,use_soft_max=F, bandwidth=0.5, kertype="normal"){
+  len_ts <-  length(ts)
+  enough_len <- T
+  min_num_samples <- num_samples
+
+  split_sample <- function(gap){
+    x <- vector()
+    y <- vector()
+    i <- len_ts
+    while (i-gap >= 1 && len_ts-i+1<= num_samples) {
+      y = append(y,ts[i])
+      x = append(x,ts[i-gap])
+      i = i-1
+    }
+    if(i-gap==0 && len_ts-i+1<= num_samples){
+      print("length of ts is not enough for num_samples samples")
+      enough_len <- F
+      min_num_samples = min(length(x),min_num_samples)
+    }
+    return(list(x=x,y=y))
+  }
+
+  kernel_model_set = list()
+  n = min_num_samples
+  X = matrix(0,n,num_lags)
+  for (i in 1:n) {
+    X[i,] = ts[(len_ts-step_forward-i+1) : (len_ts-step_forward-(num_lags-1)-i+1)]
+  }
+  Y = ts[len_ts:(len_ts-n+1)]
+
+  for (gap in 1:num_lags) {
+    temp = split_sample(gap+step_forward-1)
+    exog = temp$x
+    endog = temp$y
+    kernel_model = ksmooth(x=exog,y=endog,kernel=kertype,bandwidth=bandwidth,x.points=c(exog,ts[len_ts-gap+1]))
+    kernel_model_set = append(kernel_model_set,kernel_model[2])
+  }
+  M = matrix(0,n,num_lags)
+  for(j in 1:num_lags){
+    M[,j] = kernel_model_set[j]$y[1:n]
+  }
+
+  weight = tryCatch({
+    solve(t(M) %*% M) %*% t(M) %*% Y
+  }, error = function(e) {
+    weight = rep(1/num_lags,num_lags)
+  })
+
+  if(use_soft_max){
+    weight = exp(weight)/sum(exp(weight))
+  }
+  pred = vector()
+  for(j in 1:num_lags){
+    pred = append(pred,kernel_model_set[j]$y[n+1])
+  }
+
+  weight_pred = t(weight) %*% pred
+  return(weight_pred)
+}
+
+MamarMultiStepforecast <- function(ts, num_lags, num_samples, max_forward_step=4, use_soft_max=F, bandwidth=0.5, kertype="normal"){
+  res <- vector()
+  for(t in 1:max_forward_step){
+    res[t] = MamarSingleStepforecast(ts=ts, num_lags=num_lags, num_samples=num_samples, step_forward=t,use_soft_max=use_soft_max, bandwidth=bandwidth, kertype=kertype)
+  }
+  return(res)
+}
 ```
 
-## Idea
-This is the introduction of my package \textbf{StatComp21091}. The main contribution of my package is to implement the Model Averaging Marginal Regression (MAMAR) algorithm proposed in the article: 
+
+## Basic Information
+This is the introduction of my package \textbf{StatComp21091}. The main contribution of my package is to implement the Model Averaging MArginal Regression (MAMAR) algorithm proposed in the article: 
  
-Li D, Linton O, Lu Z. A flexible semiparametric forecasting model for time series[J]. Journal of Econometrics, 2015, 187(1): 345-357.
+>Li D, Linton O, Lu Z. A flexible semiparametric forecasting model for time series[J]. Journal of Econometrics, 2015, 187(1): 345-357.
  
 This algorithm basically approximate a multivariate regression function by an affine combination of one-dimensional marginal regression functions. 
 
-## Funtion
-The \code{mamar()} function implement MAMAR algorithm. 
+## Method
+See [Li D (2015)](https://www.sciencedirect.com/science/article/abs/pii/S0304407615000500)
+
+## Usage
+The \code{MamarSingleStepforecast()} function implement MAMAR algorithm to make single point forecasting of the input timeseries, with \code{num_lags} marginal regression models and last \code{num_samples} samples. For example, the following code make a one step forward forecast of \code{input_timeseries}:
+```{r}
+input_timeseries = rnorm(100)
+pred <- MamarSingleStepforecast(ts=input_timeseries, num_lags=3, num_samples=50,step_forward=1)
 ```
-model <- mamar(x)
+and the result:
+```{r}
+print(pred)
 ```
+Similarly, the \code{MamarMultiStepforecast()} function make multi-step forecast:
+```{r}
+multi_pred <- MamarMultiStepforecast(ts=input_timeseries, num_lags=3, 
+                                     num_samples=50,max_forward_step = 7)
+print(multi_pred)
+```
+
+
